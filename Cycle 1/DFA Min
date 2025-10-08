@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_STATES 50
+#define MAX_SYMBOLS 10
+
+// --- Global Data Structures for Input DFA ---
+int dfa_transitions[MAX_STATES][MAX_SYMBOLS];
+int is_final[MAX_STATES] = {0}; // 1 if final, 0 otherwise
+int num_states, num_symbols;
+
+// --- Data Structures for Minimization Algorithm ---
+// Table to mark distinguishable pairs of states
+int distinguishable[MAX_STATES][MAX_STATES] = {0};
+// Array to store the partition (new state group) for each old state
+int partition[MAX_STATES];
+
+// --- Main Minimization Logic ---
+int main() {
+    // --- 1. Get DFA Input ---
+    printf("--- DFA Minimization ---\n");
+    printf("Enter the number of states: ");
+    scanf("%d", &num_states);
+    printf("Enter the number of symbols: ");
+    scanf("%d", &num_symbols);
+
+    printf("\nEnter the transition table:\n");
+    for (int i = 0; i < num_states; i++) {
+        for (int j = 0; j < num_symbols; j++) {
+            printf("d(q%d, %d) = q", i, j);
+            scanf("%d", &dfa_transitions[i][j]);
+        }
+    }
+
+    int num_final;
+    printf("\nEnter number of final states: ");
+    scanf("%d", &num_final);
+    printf("Enter the final states: ");
+    for (int i = 0; i < num_final; i++) {
+        int final_state;
+        scanf("%d", &final_state);
+        if (final_state < num_states) {
+            is_final[final_state] = 1;
+        }
+    }
+
+    // --- 2. Table-Filling Algorithm to Mark Distinguishable Pairs ---
+
+    // Step 1: Initial Marking. Mark all pairs (p, q) where one is final and the other isn't.
+    for (int i = 0; i < num_states; i++) {
+        for (int j = i + 1; j < num_states; j++) {
+            if (is_final[i] != is_final[j]) {
+                distinguishable[i][j] = 1;
+            }
+        }
+    }
+
+    // Step 2: Iteratively mark pairs based on their transitions.
+    int changed;
+    do {
+        changed = 0;
+        // For every pair of states (i, j)
+        for (int i = 0; i < num_states; i++) {
+            for (int j = i + 1; j < num_states; j++) {
+                // If the pair is not yet marked
+                if (distinguishable[i][j] == 0) {
+                    // Check their transitions for each symbol
+                    for (int k = 0; k < num_symbols; k++) {
+                        int next1 = dfa_transitions[i][k];
+                        int next2 = dfa_transitions[j][k];
+
+                        // Ensure order for checking the upper triangle of the table
+                        if (next1 > next2) {
+                            int temp = next1;
+                            next1 = next2;
+                            next2 = temp;
+                        }
+
+                        // If the destination pair (next1, next2) is marked, mark (i, j)
+                        if (next1 != next2 && distinguishable[next1][next2] == 1) {
+                            distinguishable[i][j] = 1;
+                            changed = 1;
+                            break; // No need to check other symbols
+                        }
+                    }
+                }
+            }
+        }
+    } while (changed);
+
+    // --- 3. Partition States into Equivalence Classes ---
+    for(int i = 0; i < num_states; i++) partition[i] = -1; // Initialize partitions
+    int partition_count = 0;
+
+    for (int i = 0; i < num_states; i++) {
+        if (partition[i] == -1) {
+            partition[i] = partition_count;
+            // Find all states j that are indistinguishable from i
+            for (int j = i + 1; j < num_states; j++) {
+                if (distinguishable[i][j] == 0) {
+                    partition[j] = partition_count;
+                }
+            }
+            partition_count++;
+        }
+    }
+
+    // --- 4. Construct and Print the Minimized DFA ---
+    printf("\n--- Minimized DFA ---\n");
+    printf("Number of states in minimized DFA: %d\n\n", partition_count);
+
+    // Print the partitions (new states)
+    for (int i = 0; i < partition_count; i++) {
+        printf("New State D%d = { ", i);
+        for (int j = 0; j < num_states; j++) {
+            if (partition[j] == i) {
+                printf("q%d ", j);
+            }
+        }
+        printf("}\n");
+    }
+
+    // Print new transition table
+    printf("\nMinimized DFA Transition Table:\n");
+    for (int i = 0; i < partition_count; i++) {
+        // Find a representative state from the original DFA for this partition
+        int rep_state = -1;
+        for (int j = 0; j < num_states; j++) {
+            if (partition[j] == i) {
+                rep_state = j;
+                break;
+            }
+        }
+
+        // Determine transitions for this new state
+        for (int j = 0; j < num_symbols; j++) {
+            int original_next_state = dfa_transitions[rep_state][j];
+            int minimized_next_state = partition[original_next_state];
+            printf("d(D%d, %d) = D%d\n", i, j, minimized_next_state);
+        }
+    }
+
+    // Print new start state
+    printf("\nNew Start State: D%d\n", partition[0]);
+
+    // Print new final states
+    printf("New Final States: { ");
+    for (int i = 0; i < partition_count; i++) {
+        // Find a representative state
+        int rep_state = -1;
+        for (int j = 0; j < num_states; j++) {
+            if (partition[j] == i) {
+                rep_state = j;
+                break;
+            }
+        }
+        // If the representative state was a final state, the new state is final
+        if (is_final[rep_state] == 1) {
+            printf("D%d ", i);
+        }
+    }
+    printf("}\n");
+
+    return 0;
+}
+

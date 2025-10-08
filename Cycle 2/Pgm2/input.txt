@@ -1,0 +1,7 @@
+// input.txt
+int a = 10 ;
+float b = 20 ;
+
+if ( a > b ) {
+    a = a + 5 ;
+}

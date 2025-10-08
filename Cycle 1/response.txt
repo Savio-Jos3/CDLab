@@ -1,0 +1,55 @@
+```python
+def epsilon_closure(state, nfa, closure=None):
+    if closure is None:
+        closure = {state}
+    stack = [state]
+    while stack:
+        curr = stack.pop()
+        for next_state in nfa.get(curr, {}).get('', []):
+            if next_state not in closure:
+                closure.add(next_state)
+                stack.append(next_state)
+    return closure
+
+def remove_epsilon_transitions(nfa, states, alphabet, start_state, accept_states):
+    new_nfa = {state: {} for state in states}
+    new_accept_states = set()
+
+    for state in states:
+        e_closure = epsilon_closure(state, nfa)
+        if any(acc_state in e_closure for acc_state in accept_states):
+            new_accept_states.add(state)
+        for symbol in alphabet:
+            reachable_states = set()
+            for s in e_closure:
+                reachable = nfa.get(s, {}).get(symbol, [])
+                reachable_states.update(reachable)
+            
+            final_states = set()
+            for r in reachable_states:
+                final_states.update(epsilon_closure(r, nfa))
+            
+            if final_states:
+                new_nfa[state][symbol] = list(final_states)
+
+    return new_nfa, new_accept_states
+
+if __name__ == '__main__':
+    nfa = {
+        'q0': {'': ['q1']},
+        'q1': {'a': ['q2'], '': ['q3']},
+        'q2': {'b': ['q3']},
+        'q3': {}
+    }
+    states = ['q0', 'q1', 'q2', 'q3']
+    alphabet = ['a', 'b']
+    start_state = 'q0'
+    accept_states = ['q3']
+
+    new_nfa, new_accept_states = remove_epsilon_transitions(nfa, states, alphabet, start_state, accept_states)
+
+    print("NFA without epsilon transitions:")
+    for state, transitions in new_nfa.items():
+        print(f"  {state}: {transitions}")
+    print("New accept states:", new_accept_states)
+```
