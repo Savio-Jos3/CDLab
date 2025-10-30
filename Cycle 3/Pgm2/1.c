@@ -1,3 +1,5 @@
+//First and Follow set computation for a given context-free grammar
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>

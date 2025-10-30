@@ -15,11 +15,6 @@ int transitions_count[MAX_STATES] = {0};
 int closure_set[MAX_STATES];
 int closure_count = 0;
 
-/**
- * @brief Checks if a state is already present in the closure set.
- * @param state The state to check.
- * @return 1 if the state is in the set, 0 otherwise.
- */
 int isInClosure(int state) {
     for (int i = 0; i < closure_count; i++) {
         if (closure_set[i] == state) {
@@ -29,21 +24,12 @@ int isInClosure(int state) {
     return 0;
 }
 
-/**
- * @brief Adds a state to the closure set if it's not already present.
- * @param state The state to add.
- */
 void addToClosure(int state) {
     if (!isInClosure(state)) {
         closure_set[closure_count++] = state;
     }
 }
 
-/**
- * @brief Performs a Depth First Search (DFS) to find all reachable states
- * via epsilon transitions using a simple array-based stack.
- * @param start_state The state to start the search from.
- */
 void findEpsilonClosure(int start_state) {
     int stack[MAX_STATES];
     int top = -1; // Stack pointer
@@ -110,5 +96,3 @@ int main() {
 
     return 0;
 }
-
-    

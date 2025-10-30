@@ -1,3 +1,5 @@
+//operator precedence parser for simple arithmetic expressions
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
