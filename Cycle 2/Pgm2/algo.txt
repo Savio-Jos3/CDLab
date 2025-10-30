@@ -1,0 +1,29 @@
+Initialization: The program starts, prints "Enter" to prompt the user for input, and then starts the Lex/Flex scanner (yylex).
+
+Start Scanning: The yylex function begins reading characters from the input.
+
+Rule Matching: The scanner attempts to match the input against its rules for each line (because both rules end with \n). Lex always prioritizes the first rule that matches.
+
+Rule 1 (.*"Savio".*\n):
+
+It first checks: Does the current line contain the substring "Savio" anywhere within it?
+
+If YES, this rule matches the entire line.
+
+Action: The program prints the message "This string contains 'Savio':" followed by the entire line of text that was just read.
+
+Rule 2 (.*\n):
+
+If NO (the line does not contain "Savio"), Rule 1 fails. The scanner then tries the next rule.
+
+This rule matches any line of text (any character . repeated * times, followed by a newline \n).
+
+Action: The program simply prints the entire line of text it just read (echoing it).
+
+Loop or End:
+
+The program repeats Step 3 for every new line of input.
+
+When the user signals the end of input (e.g., by pressing Ctrl+D), the yylex function finishes.
+
+The main function returns 0, and the program exits.

@@ -1,0 +1,67 @@
+Initialization:
+
+Define a list of 32 C keywords.
+
+Define a string of single-character operators (+-*/%=><).
+
+Create an empty buffer (a temporary storage) to build multi-character tokens.
+
+File Opening:
+
+Try to open the file named "input.txt" in read mode.
+
+If the file doesn't open, print an error message and stop.
+
+Tokenization Loop:
+
+Print a header to show where the tokens begin.
+
+Start a loop that reads the file one character at a time until it reaches the End-of-File (EOF).
+
+Token Recognition (Inside the Loop):
+
+For each character read:
+
+Step 1: Skip Whitespace: If the character is a space (' '), tab ('\t'), or newline ('\n'), ignore it and immediately read the next character.
+
+Step 2: Check for Operators: Check if the character matches any in the operators string. If it does, print the character and label it as an OPERATOR.
+
+Step 3: Check for Identifiers/Keywords:
+
+If the character is a letter (isalpha), this is the start of an identifier or keyword.
+
+Add this letter to the buffer.
+
+Keep reading subsequent characters from the file as long as they are letters or numbers (isalnum). Add each one to the buffer.
+
+When a character is read that is not a letter or number, stop.
+
+Crucially, "push" this last character back onto the file's input stream (using ungetc). This ensures it will be the next character processed by the main loop.
+
+Compare the completed buffer against the list of keywords.
+
+If it matches, print the buffer as a KEYWORD.
+
+Otherwise, print the buffer as an IDENTIFIER.
+
+Step 4: Check for Numbers:
+
+Else if the character is a digit (isdigit), this is the start of a number.
+
+Add this digit to the buffer.
+
+Keep reading subsequent characters as long as they are digits. Add each one to the buffer.
+
+When a non-digit character is read, stop.
+
+"Push" this last character back onto the file's input stream.
+
+Print the buffer as a NUMBER.
+
+Step 5: Check for Special Symbols:
+
+Else if the character is a ;, {, }, (, or ), print it as a SPECIAL SYMBOL.
+
+Cleanup:
+
+After the loop finishes (at EOF), close the file.

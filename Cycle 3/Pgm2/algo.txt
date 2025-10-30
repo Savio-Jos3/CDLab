@@ -1,0 +1,186 @@
+This program computes the FIRST and FOLLOW sets for a given context-free grammar, which are essential components for building predictive parsers (like LL(1) parsers).
+
+📜 Explanation
+The program is divided into two main parts: the FIRST set calculation (a recursive process) and the FOLLOW set calculation (an iterative process).
+
+1. FIRST Set Calculation
+The FIRST set of a non-terminal A is the set of all terminals (including epsilon, denoted as #) that can appear as the first symbol in a string derived from A.
+
+The program uses a recursive function, find_first(char non_terminal), to compute this:
+
+Memoization: It uses a visited_first array to keep track of non-terminals for which find_first has already been completed. This prevents infinite loops in recursive grammars (e.g., A=B..., B=A...).
+
+Base Cases (for a rule A = ...):
+
+If the rule is A = # (epsilon), add # to FIRST(A).
+
+If the rule starts with a terminal, A = a... (e.g., A = +B), add that terminal a to FIRST(A).
+
+Recursive Step (for a rule A = B C D...):
+
+It recursively finds FIRST(B).
+
+It adds everything in FIRST(B) (except #) to FIRST(A).
+
+If FIRST(B) contains # (epsilon), it means B can be empty. The algorithm must then look at the next symbol, C. It adds FIRST(C) (except #) to FIRST(A).
+
+This continues until it finds a symbol whose FIRST set does not contain # or it runs out of symbols.
+
+If all symbols in the rule (e.g., B, C, and D) can produce #, then # is added to FIRST(A).
+
+2. FOLLOW Set Calculation
+The FOLLOW set of a non-terminal B is the set of all terminals that can appear immediately after B in a valid string of the grammar.
+
+The program calculates this iteratively in the main function using a fixed-point algorithm. It repeatedly loops over all productions until no new terminals can be added to any FOLLOW set.
+
+Rule 1: Start Symbol
+
+The program adds $ (the end-of-input marker) to the FOLLOW set of the start symbol (assumed to be the non-terminal of the first production).
+
+Rule 2: (For a rule A = ...B gamma...)
+
+If a non-terminal B is followed by anything (gamma), everything in FIRST(gamma) (except #) is added to FOLLOW(B).
+
+Rule 3: (For a rule A = ...B or A = ...B gamma... where FIRST(gamma) contains #)
+
+If a non-terminal B is at the very end of a production, or if it is followed by symbols (gamma) that can all derive epsilon, then B can be followed by whatever can follow A.
+
+Therefore, everything in FOLLOW(A) is added to FOLLOW(B).
+
+The loop (while (changed)) ensures that Rule 3 propagates all terminals. For example, if A=BC and E=DA, adding $ to FOLLOW(E) will eventually cause $ to be added to FOLLOW(A) (by Rule 3), which will then be added to FOLLOW(C) (by Rule 3 again).
+
+🤖 Algorithm
+Here is the algorithm derived from the code:
+
+1. Main Driver Algorithm
+Initialize:
+
+Clear all first_sets and follow_sets strings.
+
+Clear visited_first array.
+
+Input:
+
+Get the number of productions.
+
+Read all productions into the productions array.
+
+Identify all unique non-terminals (from the left-hand side of rules) and store them.
+
+Compute FIRST Sets:
+
+For each unique non-terminal N:
+
+Call find_first(N).
+
+Compute FOLLOW Sets:
+
+Call compute_follow().
+
+Output:
+
+Print all computed FIRST sets.
+
+Print all computed FOLLOW sets.
+
+2. find_first(N) Algorithm (Recursive)
+If visited_first[N] is true, return (to prevent re-computation and infinite loops).
+
+For each production P where P.left_side == N (e.g., N = Y_1 Y_2 ... Y_k):
+
+all_previous_had_epsilon = true
+
+For each symbol Y_i (from i=1 to k) in the production's right side:
+
+If Y_i is a terminal:
+
+add_to_set(first_sets[N], Y_i)
+
+all_previous_had_epsilon = false
+
+break (stop processing this production's RHS)
+
+If Y_i is a non-terminal:
+
+Recursively call find_first(Y_i).
+
+has_epsilon = false
+
+For each symbol s in first_sets[Y_i]:
+
+If s == '#':
+
+has_epsilon = true
+
+Else:
+
+add_to_set(first_sets[N], s)
+
+If has_epsilon is false:
+
+all_previous_had_epsilon = false
+
+break (stop processing this production's RHS)
+
+If all_previous_had_epsilon is still true after the inner loop (meaning the entire RHS can be epsilon), add_to_set(first_sets[N], '#').
+
+Set visited_first[N] = true.
+
+3. compute_follow() Algorithm (Iterative)
+Initialize:
+
+Let S be the start symbol (e.g., productions[0][0]).
+
+add_to_set(follow_sets[S], '$').
+
+Fixed-Point Loop:
+
+changed = true
+
+while (changed):
+
+changed = false
+
+For each production A = Y_1 Y_2 ... Y_k in the grammar:
+
+For each non-terminal B at position j (where B = Y_j):
+
+old_follow_len = length(follow_sets[B])
+
+gamma_has_epsilon = true
+
+// Apply Rule 2: Find FIRST of string gamma (Y_{j+1} ... Y_k)
+
+For each symbol Y_i from i = j+1 to k:
+
+gamma_has_epsilon = false
+
+If Y_i is a terminal:
+
+add_to_set(follow_sets[B], Y_i)
+
+break (stop processing gamma)
+
+If Y_i is a non-terminal:
+
+Add all symbols from first_sets[Y_i] (except '#') to follow_sets[B].
+
+If '#' is not in first_sets[Y_i]:
+
+break (stop processing gamma)
+
+Else ('#' is present):
+
+gamma_has_epsilon = true
+
+// Apply Rule 3: If gamma was empty or gamma_has_epsilon is true
+
+If j == k (B is last symbol) OR gamma_has_epsilon is true:
+
+Add all symbols from follow_sets[A] to follow_sets[B].
+
+// Check if any set grew
+
+If length(follow_sets[B]) > old_follow_len:
+
+changed = true
